@@ -37,13 +37,13 @@
   },
   "homepage": "https://github.com/sodaru/jest-environment-steps#readme",
   "peerDependencies": {
-    "jest": "^27.0.3",
-    "prettier": "^2.3.2"
+    "jest": "^27.0.3"
   },
   "devDependencies": {
     "@types/jest": "^27.0.3",
     "jest": "^27.0.3",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "prettier": "^2.3.2"
   },
   "prettier": {
     "arrowParens": "avoid",
