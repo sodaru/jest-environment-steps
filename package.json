@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "clean": "npx rimraf dist",
-    "prettier": "npx prettier --check --ignore-unknown ./**/*",
+    "prettier": "npx prettier --check --ignore-unknown ./",
     "tsc": "npx tsc",
     "build": "npm run prettier && npm run clean && npm run tsc",
     "prepack": "npm run build",
