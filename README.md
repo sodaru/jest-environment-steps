@@ -64,6 +64,6 @@ For more configuration on using environment in jest refer [Jest Config Doc](http
 
 ## Support
 
-This project is a part of Open Source Intitiative from [Sodaru Technologies](https://sodaru.com)
+This project is a part of the Open Source Initiative from [Sodaru Technologies](https://sodaru.com)
 
 Write an email to opensource@sodaru.com for queries on this project
