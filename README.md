@@ -8,23 +8,24 @@ Jest Environment to run the tests as Steps
 
 ## Overview
 
-In [Jest](https://jestjs.io/), all `test`s with in a `describe` block run sequentially in the order of their appearance.
-But <u>**if a tests fails , the next tests continue to execute**</u>.
+In [Jest](https://jestjs.io/), all `test`s within a test file run sequentially in the order of their appearance.
+But <u>**if a test fails, the next tests continue to execute**</u>.
 
-For writing tests for a behaviour where each test depends on success of previous test, this built-in feature may cause unnecessory tests to run
+For writing tests for a behavior, where each test depends on the success of the previous test, this built-in feature may cause unnecessary tests to run when a test fails.
 
-_Example of behaviour tests._
+### Examples of behavior tests
 
-Testing a CRUD apis on a database. Writing test for Create, Read, Update and Delete in the same sequence makes the it sense to test all apis in same order. and if Create fails , there is no pointing testing if the read , update and delete
+- Testing the CRUD APIs on a database.  
+   Writing the tests for Create, Read, Update, and Delete in the same sequence make it sense to test all APIs in the same order. When Create fails, there is no point in running tests for Read, Update, and Delete APIs
 
-This library provides a jest [environment](https://jestjs.io/docs/configuration#testenvironment-string) to add new features to the way the tests are executed
+This library provides a [jest environment](https://jestjs.io/docs/configuration#testenvironment-string) to add new features to the way the tests are executed.
 
-Inspired from [Mocha Steps](https://github.com/rprieto/mocha-steps)
+Inspired by [Mocha Steps](https://github.com/rprieto/mocha-steps)
 
 ## Features
 
-- Runs all previous tests, before running the current test
-- Skip all next tests , if current test fails
+- Runs all previous tests, before running the selected test when the [testNamePattern](https://jestjs.io/docs/cli#--testnamepatternregex) argument is provided.
+- Skip all next tests, if a test fails
 
 ## Install
 
@@ -34,16 +35,18 @@ npm i jest-environment-steps
 
 ## Usage
 
+An environment in jest can be applied using either of the below options.
+
 1. Set `testEnvironment` in jest.config.js to enable Steps for all tests
 
-   ```JS
+   ```javascript
    // jest.config.js
    {
        "testEnvironment": "steps"
    }
    ```
 
-2. use docBlock to enable Steps for a specific file
+2. Use the docBlock to enable Steps for a specific file
 
    ```JS
    /**
@@ -55,12 +58,11 @@ npm i jest-environment-steps
    })
    ```
 
-For more configuration on using environment in jest refer [Jest Config Doc](https://jestjs.io/docs/configuration#testenvironment-string)
+For more configuration on using the environment in jest refer to [Jest Config Doc](https://jestjs.io/docs/configuration#testenvironment-string)
 
 ## Assumptions
 
-- This Enables Steps on top of `node` environment only
--
+- This Enables Steps on top of the [node](https://jestjs.io/docs/configuration#testenvironment-string) environment only
 
 ## Support
 

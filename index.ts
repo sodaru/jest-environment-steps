@@ -1,58 +1,96 @@
 import NodeEnvironment from "jest-environment-node";
+import { Circus } from "@jest/types";
+
+const getTestAbsoluteName = (test: Circus.TestEntry) => {
+  const names: string[] = [];
+  let parentBlock: Circus.DescribeBlock | Circus.TestEntry | undefined = test;
+  while (parentBlock) {
+    names.unshift(parentBlock.name);
+    parentBlock = parentBlock.parent;
+  }
+
+  return names.join(" ");
+};
+
+const getTestEntryMap = (state: Circus.State) => {
+  const testEntryMap: Record<string, Circus.TestEntry> = {};
+  const updateMap = (
+    node: Circus.DescribeBlock | Circus.TestEntry,
+    parentName: string
+  ) => {
+    if (node.type == "test") {
+      testEntryMap[[parentName, node.name].join(" ")] = node;
+    } else {
+      for (const child of node.children) {
+        updateMap(child, [parentName, node.name].join(" ").trim());
+      }
+    }
+  };
+  updateMap(state.rootDescribeBlock, "");
+  return testEntryMap;
+};
+
+const resolveTestPattern = (
+  pattern: string,
+  testEntryMap: Record<string, Circus.TestEntry>
+) => {
+  const testEntryNames = Object.keys(testEntryMap);
+  testEntryNames.reverse();
+  let testAbsoluteName: string = "";
+  for (const testEntryName of testEntryNames) {
+    if (testEntryName.startsWith(`ROOT_DESCRIBE_BLOCK ${pattern}`.trim())) {
+      testAbsoluteName = testEntryName;
+      break;
+    }
+  }
+  return testAbsoluteName;
+};
 
 export default class StepEnvironment extends NodeEnvironment {
-  async handleTestEvent(event, state) {
-    const skipFutureTests = (testName, describeBlockName, state) => {
-      let foundSelectedTest = false;
-      state.currentDescribeBlock.children.forEach(describeBlock => {
-        if (describeBlock.name == describeBlockName) {
-          describeBlock.tests.forEach(test => {
-            if (!foundSelectedTest) {
-              if (test.name == testName) {
-                foundSelectedTest = true;
-              }
-            } else {
-              test.mode = "skip";
-            }
-          });
+  async handleTestEvent(event: Circus.AsyncEvent, state: Circus.State) {
+    const skipFutureTests = (
+      testOrPattern: string | Circus.TestEntry,
+      state: Circus.State
+    ) => {
+      const testEntryMap = getTestEntryMap(state);
+
+      const absoluteName =
+        typeof testOrPattern == "string"
+          ? resolveTestPattern(testOrPattern, testEntryMap)
+          : getTestAbsoluteName(testOrPattern);
+
+      let i = 0;
+      const absoluteNames = Object.keys(testEntryMap);
+
+      for (; i < absoluteNames.length; i++) {
+        if (absoluteNames[i] == absoluteName) {
+          i++;
+          break;
         }
-      });
+      }
+      for (; i < absoluteNames.length; i++) {
+        testEntryMap[absoluteNames[i]].mode = "skip";
+      }
     };
 
-    if (
-      event.name == "run_describe_start" &&
-      event.describeBlock.tests.length > 0
-    ) {
-      const testNamePattern = state.testNamePattern
+    if (event.name == "run_start") {
+      const testNamePatternStr = state.testNamePattern
         ? state.testNamePattern.toString()
         : "//i";
-      const testNamePatternStr = testNamePattern.substring(
+      const testNamePattern = testNamePatternStr.substring(
         1,
-        testNamePattern.length - 2
+        testNamePatternStr.length - 2
       );
-      const describeBlockName = event.describeBlock.name;
-      if (
-        testNamePatternStr.startsWith(describeBlockName) &&
-        testNamePatternStr.length > describeBlockName.length
-      ) {
-        // testNamePattern starts with this describe name , and has more to it
-        // meaning trying to run a specific test
+      // reset the testNamePattern, so that all tests are eligible to run
+      state.testNamePattern = undefined;
 
-        // reset the namePattern only to describeBlock name
-        state.testNamePattern = new RegExp(describeBlockName, "i");
-
-        // skip all future tests
-        const testName = testNamePatternStr
-          .substring(describeBlockName.length)
-          .trim();
-
-        skipFutureTests(testName, describeBlockName, state);
-      }
+      // skip the tests that appears after the pattern
+      skipFutureTests(testNamePattern, state);
     }
 
     //skip future tests if current test failed
     if (event.name == "test_fn_failure") {
-      skipFutureTests(event.test.name, event.test.parent.name, state);
+      skipFutureTests(event.test, state);
     }
   }
 }
